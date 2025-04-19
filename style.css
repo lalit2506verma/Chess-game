@@ -1,0 +1,47 @@
+/* Color to use
+  grey(chess black) - #729551
+white (chess white) - #ececd0
+*/
+
+*{
+    padding: 0;
+    margin: 0;
+    /* box-sizing: border-box; */
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: sans-serif;
+}
+
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: whitesmoke;
+}
+
+.panel{
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    /* size of 1 square = 70px
+    total size = 70 * 8 = 560px
+     */
+    height: 560px;
+    width: 560px;
+    border: 1px solid black;
+}
+
+.square{
+    background-color: #729551;
+    width: 70px;
+    height: 70px;
+}
+
+.off-green{
+    background-color: #ececd0;
+}
+
