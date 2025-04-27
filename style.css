@@ -41,6 +41,9 @@ html, body {
     background-color: #729551;
     width: 70px;
     height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .off-green{
@@ -51,4 +54,18 @@ img{
     height: 100%;
     width: 100%;
 }
+
+.highlighted-square{
+    background-color: #baca2c !important;
+}
+
+.highlighted-circle {
+    height: 15px;
+    width:15px;
+    /* border: 1px solid black; */
+    border-radius: 15px;
+    background-color: #5d5956;
+    opacity: 0.4;
+}
+
 
