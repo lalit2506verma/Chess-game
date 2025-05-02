@@ -2,9 +2,16 @@
 const filesName = ["a", "b", "c", "d", "e", "f", "g", "h"];
 let fileCounter = 0;
 
+// Global array to track highlighted move
+let highlightMoves = [];
+
+let clickedElements = [];
+let selectedPiece = null;
+let selectedSquare = null;
+
+
 const squares = document.querySelectorAll('.files');
 const arrayOfFiles = Array.from(squares);
-
 
 arrayOfFiles.forEach(file => {
 
@@ -22,10 +29,6 @@ arrayOfFiles.forEach(file => {
 })
 
 const allSquares = document.querySelectorAll('.square');
-let clickedElements = [];
-let selectedPiece = null;
-let selectedSquare = null;
-
 
 // Handle clicks
 Array.from(allSquares).forEach(square => {
@@ -33,7 +36,7 @@ Array.from(allSquares).forEach(square => {
     square.addEventListener("click", (e) => {
 
         let clickedElement = e.target;
-        console.log(clickedElement);
+        //console.log(clickedElement);
 
         const parentSquare = clickedElement.closest('.square');
 
@@ -55,16 +58,36 @@ Array.from(allSquares).forEach(square => {
             clearHighlights();
             removeHighlightedMove();
 
+            // Highlight selected square
+            highlightSquare(clickedElement);
+
             // Separating black and white color
             if (color === 'black') {
                 // Handle Black pieces
                 switch (pieceType) {
 
                     case 'pawn':
-
-                        highlightSquare(clickedElement);
                         highlightPawnMoves(currPosition, color);
                         break;
+
+                    case 'rook':
+                        highlightRookMoves(currPosition, color);
+                        break;
+
+                    case 'bishop':
+                        highlightBishopMoves(currPosition, color);
+                        break;
+
+                    case 'knight':
+                        highlightKnightMoves(currPosition, color);
+                        break;
+
+                    case 'queen':
+                        highlightQueenMoves(currPosition, color);
+                        break;
+
+                    case 'king':
+                        highlightKingMoves(currPosition, color);
 
                     default:
                         break;
@@ -75,21 +98,44 @@ Array.from(allSquares).forEach(square => {
                 switch (pieceType) {
                     case 'pawn':
 
-                        highlightSquare(clickedElement);
                         highlightPawnMoves(currPosition, color);
                         break;
+
+                    case 'rook':
+                        highlightRookMoves(currPosition, color);
+                        break;
+
+                    case 'bishop':
+                        highlightBishopMoves(currPosition, color);
+                        break;
+
+                    case 'knight':
+                        highlightKnightMoves(currPosition, color);
+                        break;
+
+                    case 'queen':
+                        highlightQueenMoves(currPosition, color);
+                        break;
+
+                    case 'king':
+                        highlightKingMoves(currPosition, color);
 
                     default:
                         break;
                 }
-
             }
         }
     });
 });
 
+function highlightSquare(clickedElement) {
+    clickedElement.classList.add('highlighted-square');
+    clickedElements.push(clickedElement);
+}
+
 // Reset another selected sqaure
 function clearHighlights() {
+
     clickedElements.forEach(square => {
         square.classList.remove('highlighted-square');
 
@@ -97,36 +143,13 @@ function clearHighlights() {
         square.removeEventListener('click', onHighlightedSquareClick);
     });
     clickedElements = [];
+
 }
-
-function highlightSquare(clickedElement) {
-    clickedElement.classList.add('highlighted-square');
-    clickedElements.push(clickedElement);
-}
-
-function highlightPawnMoves(pos, color) {
-
-    const file = pos[0];
-    const rank = parseInt(pos[1]);
-
-    let nextRank = color === 'white' ? rank + 1 : rank - 1;
-    let doubleNextRank = color === 'white' ? rank + 2 : rank - 2;
-
-    highlightMove(file + nextRank);
-
-    // Allow double move only if on starting position
-    if (color === 'white' && rank === 2 || color === 'black' && rank === 7) {
-        highlightMove(file + doubleNextRank);
-    }
-}
-
-// Global array to track highlighted move
-let highlightMoves = [];
 
 // Highlighting next Possible Moves
 function highlightMove(position) {
 
-    const square = document.querySelector("#" + position);
+    const square = document.querySelector("#" + position); // selecting  by ID
     if (square) {
         const circle = document.createElement('div');
         circle.classList.add('highlighted-circle');
@@ -160,6 +183,186 @@ function onHighlightedSquareClick(e) {
     selectedSquare = null;
 }
 
+// ------------------------ Piece Moves function ----------------------->
+
+// PAWN MOVE    
+function highlightPawnMoves(pos, color) {
+
+    const file = pos[0];
+    const rank = parseInt(pos[1]);
+
+    let nextRank = color === 'white' ? rank + 1 : rank - 1;
+    let doubleNextRank = color === 'white' ? rank + 2 : rank - 2;
+
+    highlightMove(file + nextRank);
+
+    // Allow double move only if on starting position
+    if (color === 'white' && rank === 2 || color === 'black' && rank === 7) {
+        highlightMove(file + doubleNextRank);
+    }
+}
+
+// ROOK MOVE
+function highlightRookMoves(pos, color) { // pos - a8, color: black
+
+    const file = pos[0];
+    const rank = parseInt(pos[1]);
+
+    const fileIdx = filesName.indexOf(file);
+
+    const directions = [
+        [0, 1],   // top
+        [0, -1],  // down
+        [1, 0],   // right
+        [-1, 0]   // left
+    ]
+
+    directions.forEach(([fileStep, rankStep]) => {
+
+        let newFileIdx = fileIdx + fileStep;
+        let newRankIdx = rank + rankStep;
+
+        while (newFileIdx >= 0 && newFileIdx < 8 && newRankIdx >= 1 && newRankIdx <= 8) {
+
+            const squareID = filesName[newFileIdx] + newRankIdx;
+            const sqaure = document.getElementById(squareID);
+            const occupant = sqaure.querySelector('img');
+
+            if (!occupant) {
+                highlightMove(squareID);
+            }
+            else {
+                if (occupant.dataset.color !== color) {
+                    highlightMove(squareID); // highlight opponent
+                }
+                break;
+            }
+
+            newFileIdx += fileStep;
+            newRankIdx += rankStep;
+        }
+    });
+
+}
+
+function highlightBishopMoves(pos, color) {
+
+    const file = pos[0];
+    const rank = parseInt(pos[1]);
+
+    let fileIdx = filesName.indexOf(file);
+
+    const directions = [
+        [1, 1],    // up-right
+        [-1, 1],   // up-left
+        [1, -1],   // down-right
+        [-1, -1],  // down-left
+    ];
+
+    directions.forEach(([fileStep, rankStep]) => {
+        let newFileIdx = fileIdx + fileStep;
+        let newRankIdx = rank + rankStep;
+
+        while (newFileIdx >= 0 && newFileIdx < 8 && newRankIdx >= 1 && newRankIdx <= 8) {
+            const squareID = filesName[newFileIdx] + newRankIdx;
+            const sqaure = document.getElementById(squareID);
+            const occupant = sqaure.querySelector('img');
+
+            if (!occupant) {
+                highlightMove(squareID);
+            }
+            else {
+                if (occupant.dataset.color !== color) {
+                    highlightMove(squareID);
+                }
+                break; // stop at first piece
+            }
+
+            newFileIdx += fileStep;
+            newRankIdx += rankStep;
+        }
+    })
+}
+
+function highlightKnightMoves(pos, color) {
+
+    const file = pos[0];
+    const rank = pos[1];
+
+    const fileIdx = filesName.indexOf(file);
+
+    const moveOffsets = [
+        [1, 2],
+        [2, 1],
+        [-1, 2],
+        [1, -2],
+        [-2, 1],
+        [-2, -1],
+        [-1, -2],
+        [2, -1]
+    ]
+
+    moveOffsets.forEach(offset => {
+
+        const newFileIdx = parseInt(fileIdx) + offset[0];
+        const newRankIdx = parseInt(rank) + offset[1];
+
+        if (newFileIdx >= 0 && newFileIdx < 8 && newRankIdx >= 1 && newRankIdx <= 8) {
+            const newPosition = filesName[newFileIdx] + newRankIdx;
+
+            const targetSquare = document.getElementById(newPosition);
+            const occupant = targetSquare.querySelector('img');
+
+            if (!occupant || occupant.dataset.color !== color) {
+                highlightMove(newPosition);
+            }
+        }
+    });
+}
+
+// QUEEN MOVEMENT
+function highlightQueenMoves(pos, color) {
+    // Queen can move both as rook and bishop
+    highlightRookMoves(pos, color);
+    highlightBishopMoves(pos, color);
+}
+
+// KING MOVEMENT
+function highlightKingMoves(pos, color) {
+
+    const file = pos[0];
+    const rank = parseInt(pos[1]);
+
+    const fileIdx = filesName.indexOf(file);
+
+    const directions = [
+        [0, 1],   // up
+        [0, -1],  // down
+        [1, 0],   // right
+        [-1, 0],  // left
+        [1, 1],   // up-right
+        [1, -1],  // down-right
+        [-1, 1],  // up-left
+        [-1, -1], // down-left
+    ]
+
+    directions.forEach(([dx, dy]) => {
+        let newFileIdx = fileIdx + dx;
+        let newRankIdx = rank + dy;
+
+        if (newFileIdx >= 0 && newFileIdx < 8 && newRankIdx >= 1 && newRankIdx <= 8) {
+            const squareID = filesName[newFileIdx] + newRankIdx;
+            const square = document.getElementById(squareID);
+
+            if (square) {
+                let occupant = square.querySelector('img');
+                if (!occupant || occupant.dataset.color !== color) {
+                    highlightMove(squareID);
+                }
+            }
+        }
+    });
+}
 
 // Move piece
 function movePiece(piece, fromSquare, toSquare) {
