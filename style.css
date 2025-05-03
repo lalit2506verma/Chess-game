@@ -22,16 +22,22 @@ html, body {
     width: 100%;
     height: 100%;
     background-color: whitesmoke;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header{
+
 }
 
 .panel{
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    /* size of 1 square = 70px
-    total size = 70 * 8 = 560px
+    /* size of 1 square = 60px
+    total size = 60 * 8 = 480px
      */
-    height: 560px;
-    width: 560px;
+    height: 520px;
+    width: 520px;
     border: 1px solid black;
     border-radius: 5px;
     overflow: hidden
@@ -39,8 +45,8 @@ html, body {
 
 .square{
     background-color: #729551;
-    width: 70px;
-    height: 70px;
+    width: 65px;
+    height: 65px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -62,11 +68,35 @@ img{
 }
 
 .highlighted-circle {
-    height: 15px;
-    width:15px;
+    height: 13px;
+    width:13px;
     /* border: 1px solid black; */
-    border-radius: 15px;
+    border-radius: 13px;
     background-color: #5d5956;
     opacity: 0.4;
     pointer-events: none;
+}
+
+#turn-indicator {
+    width: 480px;
+    height: 30px;
+    border: 1px solid black;
+    margin: 20px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s, color 0.3s, transform 0.3s;
+}
+
+#turn-indicator.white {
+    background-color: #f0f0f0;
+    color: #000;
+}
+
+#turn-indicator.black {
+    background-color: #000;
+    color: #f0f0f0;
 }

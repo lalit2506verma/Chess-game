@@ -9,6 +9,9 @@ let clickedElements = [];
 let selectedPiece = null;
 let selectedSquare = null;
 
+let currentTurn = 'white';
+
+const turnIndicator = document.getElementById('turn-indicator');
 
 const squares = document.querySelectorAll('.files');
 const arrayOfFiles = Array.from(squares);
@@ -49,6 +52,13 @@ Array.from(allSquares).forEach(square => {
             console.log('You clicked:', clickedElement.dataset.color, clickedElement.dataset.piece);
 
             const color = clickedElement.dataset.color;
+
+            // blocking clicks if it not color turn
+            if (color !== currentTurn) {
+                console.log(`It's ${currentTurn}'s turn`);
+                return;
+            }
+
             const pieceType = clickedElement.dataset.piece;
             const currPosition = parentSquare.getAttribute('id');
 
@@ -96,8 +106,8 @@ Array.from(allSquares).forEach(square => {
             else {
                 // white
                 switch (pieceType) {
-                    case 'pawn':
 
+                    case 'pawn':
                         highlightPawnMoves(currPosition, color);
                         break;
 
@@ -181,6 +191,22 @@ function onHighlightedSquareClick(e) {
     clearHighlights();
     selectedPiece = null;
     selectedSquare = null;
+
+    // changing the turn once movement happen
+    currentTurn = currentTurn === 'white' ? 'black' : 'white';
+    updateTurnUI();
+}
+
+// UPDATE UI COMPONENT FOR TURN
+function updateTurnUI() {
+    turnIndicator.textContent = currentTurn.charAt(0).toUpperCase() + currentTurn.slice(1) + "'s Turn";
+
+    // remove both classes first
+    turnIndicator.classList.remove('white', 'black');
+
+    //add classlist
+    turnIndicator.classList.add(currentTurn);
+
 }
 
 // ------------------------ Piece Moves function ----------------------->
