@@ -160,7 +160,27 @@ function clearHighlights() {
 function highlightMove(position) {
 
     const square = document.querySelector("#" + position); // selecting  by ID
-    if (square) {
+
+    if (!square) {
+        return;
+    }
+
+    const existingPiece = square.querySelector('img');
+
+    if (existingPiece) {
+        const targetColor = existingPiece.dataset.color;
+
+        // Only allow capture if it's the opponent
+        if (existingPiece !== currentTurn) {
+            const circle = document.createElement('div');
+            circle.classList.add('highlighted-circle');
+            square.appendChild(circle);
+            highlightMoves.push(square);
+            square.addEventListener('click', onHighlightedSquareClick);
+        }
+    }
+    else {
+        // Empty square
         const circle = document.createElement('div');
         circle.classList.add('highlighted-circle');
         square.appendChild(circle);
@@ -169,6 +189,7 @@ function highlightMove(position) {
         // Add event Listner on each highlighted Moves
         square.addEventListener('click', onHighlightedSquareClick);
     }
+
 }
 
 // Remove existing Highlighted move
@@ -259,7 +280,8 @@ function highlightRookMoves(pos, color) { // pos - a8, color: black
             }
             else {
                 if (occupant.dataset.color !== color) {
-                    highlightMove(squareID); // highlight opponent
+                    // Opponent found
+                    highlightMove(squareID);
                 }
                 break;
             }
@@ -393,10 +415,30 @@ function highlightKingMoves(pos, color) {
 // Move piece
 function movePiece(piece, fromSquare, toSquare) {
 
-    // remove the piece img from parent element
-    fromSquare.removeChild(piece);
+    const opponent = toSquare.querySelector('img');
 
-    // add element to destination position
-    toSquare.appendChild(piece);
-    removeHighlightedMove();
+    if (opponent && opponent.dataset.color !== piece.dataset.color) {
+
+        // play capture sound
+        document.getElementById("capture-sound").play();
+
+        // Animation fade-out
+        opponent.classList.add(".captured");
+        setTimeout(() => {
+            toSquare.removeChild(opponent);
+            fromSquare.removeChild(piece);
+            toSquare.appendChild(piece);
+            removeHighlightedMove()
+        }, 300);
+    }
+    else {
+
+        // remove the piece img from parent element
+        fromSquare.removeChild(piece);
+
+        // add element to destination position
+        toSquare.appendChild(piece);
+        removeHighlightedMove();
+
+    }
 }
