@@ -238,10 +238,27 @@ function highlightPawnMoves(pos, color) {
     const file = pos[0];
     const rank = parseInt(pos[1]);
 
+    const fileIdx = filesName.indexOf(file);
     let nextRank = color === 'white' ? rank + 1 : rank - 1;
-    let doubleNextRank = color === 'white' ? rank + 2 : rank - 2;
 
-    highlightMove(file + nextRank);
+    const forwardSquare = document.getElementById(file + nextRank);
+
+    if (forwardSquare && !forwardSquare.querySelector("img")) {
+        highlightMove(filesName[fileIdx] + nextRank);
+    }
+
+    const dir = [1, -1]; // file direction
+
+    dir.forEach(nextFileStep => {
+        const nextDia = document.getElementById(filesName[fileIdx + nextFileStep] + nextRank);
+        const opponent = nextDia.querySelector('img');
+
+        if (opponent) {
+            highlightMove(filesName[fileIdx + nextFileStep] + nextRank);
+        }
+    })
+
+    let doubleNextRank = color === 'white' ? rank + 2 : rank - 2;
 
     // Allow double move only if on starting position
     if (color === 'white' && rank === 2 || color === 'black' && rank === 7) {
