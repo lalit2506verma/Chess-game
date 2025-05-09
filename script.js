@@ -9,7 +9,12 @@ let clickedElements = [];
 let selectedPiece = null;
 let selectedSquare = null;
 
+let whiteKingPosition = "d1";
+let blackKingPosition = "e8";
+
 let currentTurn = 'white';
+
+let moves = [];
 
 const turnIndicator = document.getElementById('turn-indicator');
 
@@ -71,69 +76,41 @@ Array.from(allSquares).forEach(square => {
             // Highlight selected square
             highlightSquare(clickedElement);
 
-            // Separating black and white color
-            if (color === 'black') {
-                // Handle Black pieces
-                switch (pieceType) {
+            // Handle Black pieces
+            switch (pieceType) {
 
-                    case 'pawn':
-                        highlightPawnMoves(currPosition, color);
-                        break;
+                case 'pawn':
+                    moves = getlegalpawnMoves(currPosition, color);
+                    break;
 
-                    case 'rook':
-                        highlightRookMoves(currPosition, color);
-                        break;
+                case 'rook':
+                    moves = getLegalRookMoves(currPosition, color);
+                    break;
 
-                    case 'bishop':
-                        highlightBishopMoves(currPosition, color);
-                        break;
+                case 'bishop':
+                    moves = getLegalBishopMoves(currPosition, color);
+                    break;
 
-                    case 'knight':
-                        highlightKnightMoves(currPosition, color);
-                        break;
+                case 'knight':
+                    moves = getLegalKnightMoves(currPosition, color);
+                    break;
 
-                    case 'queen':
-                        highlightQueenMoves(currPosition, color);
-                        break;
+                case 'queen':
+                    moves = getLegalQueenMoves(currPosition, color);
+                    break;
 
-                    case 'king':
-                        highlightKingMoves(currPosition, color);
+                case 'king':
+                    moves = getLegalKingMoves(currPosition, color);
+                    break;
 
-                    default:
-                        break;
-                }
+                default:
+                    break;
             }
-            else {
-                // white
-                switch (pieceType) {
 
-                    case 'pawn':
-                        highlightPawnMoves(currPosition, color);
-                        break;
+            console.log(moves);
 
-                    case 'rook':
-                        highlightRookMoves(currPosition, color);
-                        break;
-
-                    case 'bishop':
-                        highlightBishopMoves(currPosition, color);
-                        break;
-
-                    case 'knight':
-                        highlightKnightMoves(currPosition, color);
-                        break;
-
-                    case 'queen':
-                        highlightQueenMoves(currPosition, color);
-                        break;
-
-                    case 'king':
-                        highlightKingMoves(currPosition, color);
-
-                    default:
-                        break;
-                }
-            }
+            highlightLegalMoves(moves, color);
+            moves = [];
         }
     });
 });
@@ -157,39 +134,27 @@ function clearHighlights() {
 }
 
 // Highlighting next Possible Moves
-function highlightMove(position) {
+function highlightLegalMoves(legalMoves, color) {
+    legalMoves.forEach((pos) => {
 
-    const square = document.querySelector("#" + position); // selecting  by ID
+        const square = document.getElementById(pos);
+        if (!square) return;
 
-    if (!square) {
-        return;
-    }
+        const existingPiece = square.querySelector('img');
+        const highlightCircle = document.createElement('div');
+        highlightCircle.classList.add('highlighted-circle');
 
-    const existingPiece = square.querySelector('img');
-
-    if (existingPiece) {
-        const targetColor = existingPiece.dataset.color;
-
-        // Only allow capture if it's the opponent
-        if (existingPiece !== currentTurn) {
-            const circle = document.createElement('div');
-            circle.classList.add('highlighted-circle');
-            square.appendChild(circle);
-            highlightMoves.push(square);
-            square.addEventListener('click', onHighlightedSquareClick);
+        if (existingPiece && existingPiece.dataset.color !== color) {
+            // Opponent's piece
+            square.appendChild(highlightCircle);
         }
-    }
-    else {
-        // Empty square
-        const circle = document.createElement('div');
-        circle.classList.add('highlighted-circle');
-        square.appendChild(circle);
+        else if (!existingPiece) {
+            square.appendChild(highlightCircle);
+        }
+
         highlightMoves.push(square);
-
-        // Add event Listner on each highlighted Moves
         square.addEventListener('click', onHighlightedSquareClick);
-    }
-
+    });
 }
 
 // Remove existing Highlighted move
@@ -205,8 +170,20 @@ function removeHighlightedMove() {
     highlightMoves = [];
 }
 
-function onHighlightedSquareClick(e) {
-    movePiece(selectedPiece, selectedSquare, e.currentTarget);
+async function onHighlightedSquareClick(e) {
+
+    let toSquare = e.currentTarget;
+    movePiece(selectedPiece, selectedSquare, toSquare);
+
+    // After move check Is king is in Danger (Check)
+    const opponentColor = currentTurn === 'white' ? 'black' : 'white';
+    setTimeout(() => {
+        const isCheck = isKingInCheck(opponentColor);
+
+        if (isCheck) {
+            showCheckNotification();
+        }
+    }, 50);
 
     // After moving, clean up everything
     clearHighlights();
@@ -214,7 +191,7 @@ function onHighlightedSquareClick(e) {
     selectedSquare = null;
 
     // changing the turn once movement happen
-    currentTurn = currentTurn === 'white' ? 'black' : 'white';
+    currentTurn = opponentColor;
     updateTurnUI();
 }
 
@@ -233,41 +210,50 @@ function updateTurnUI() {
 // ------------------------ Piece Moves function ----------------------->
 
 // PAWN MOVE    
-function highlightPawnMoves(pos, color) {
-
+function getlegalpawnMoves(pos, color) {
+    const legalMoves = [];
     const file = pos[0];
     const rank = parseInt(pos[1]);
 
     const fileIdx = filesName.indexOf(file);
-    let nextRank = color === 'white' ? rank + 1 : rank - 1;
+    const nextRank = color === 'white' ? rank + 1 : rank - 1;
 
+    // Normal move
     const forwardSquare = document.getElementById(file + nextRank);
+    if (forwardSquare && !forwardSquare.querySelector('img')) {
 
-    if (forwardSquare && !forwardSquare.querySelector("img")) {
-        highlightMove(filesName[fileIdx] + nextRank);
+        legalMoves.push(file + nextRank);
     }
 
-    const dir = [1, -1]; // file direction
+    // Diagonal capture
+    dir = [-1, 1];
+    dir.forEach(step => {
+        let nextFileIdx = fileIdx + step;
+        if (nextFileIdx >= 0 && nextFileIdx < 7) {
 
-    dir.forEach(nextFileStep => {
-        const nextDia = document.getElementById(filesName[fileIdx + nextFileStep] + nextRank);
-        const opponent = nextDia.querySelector('img');
-
-        if (opponent) {
-            highlightMove(filesName[fileIdx + nextFileStep] + nextRank);
+            const targetID = filesName[nextFileIdx] + nextRank;
+            const targetSquare = document.getElementById(targetID);
+            if (targetSquare && targetSquare.querySelector('img') && targetSquare.querySelector('img').dataset.color !== color) {
+                legalMoves.push(targetID);
+            }
         }
-    })
+    });
 
-    let doubleNextRank = color === 'white' ? rank + 2 : rank - 2;
+    // Double move
+    const doubleRank = color === 'white' ? 2 : 7;
+    const doubleNextRank = color === 'white' ? rank + 2 : rank - 2;
 
-    // Allow double move only if on starting position
-    if (color === 'white' && rank === 2 || color === 'black' && rank === 7) {
-        highlightMove(file + doubleNextRank);
+    if (rank === doubleRank && !document.getElementById(file + nextRank).querySelector('img')
+        && !document.getElementById(file + doubleNextRank).querySelector('img')) {
+        legalMoves.push(file + doubleNextRank);
     }
+
+    return legalMoves;
 }
 
 // ROOK MOVE
-function highlightRookMoves(pos, color) { // pos - a8, color: black
+function getLegalRookMoves(pos, color) { // pos - a8, color: black
+    let legalMoves = [];
 
     const file = pos[0];
     const rank = parseInt(pos[1]);
@@ -293,12 +279,12 @@ function highlightRookMoves(pos, color) { // pos - a8, color: black
             const occupant = sqaure.querySelector('img');
 
             if (!occupant) {
-                highlightMove(squareID);
+                legalMoves.push(squareID);
             }
             else {
                 if (occupant.dataset.color !== color) {
                     // Opponent found
-                    highlightMove(squareID);
+                    legalMoves.push(squareID);
                 }
                 break;
             }
@@ -308,9 +294,12 @@ function highlightRookMoves(pos, color) { // pos - a8, color: black
         }
     });
 
+    return legalMoves;
+
 }
 
-function highlightBishopMoves(pos, color) {
+function getLegalBishopMoves(pos, color) {
+    let legalMoves = [];
 
     const file = pos[0];
     const rank = parseInt(pos[1]);
@@ -334,11 +323,11 @@ function highlightBishopMoves(pos, color) {
             const occupant = sqaure.querySelector('img');
 
             if (!occupant) {
-                highlightMove(squareID);
+                legalMoves.push(squareID);
             }
             else {
                 if (occupant.dataset.color !== color) {
-                    highlightMove(squareID);
+                    legalMoves.push(squareID);
                 }
                 break; // stop at first piece
             }
@@ -346,10 +335,13 @@ function highlightBishopMoves(pos, color) {
             newFileIdx += fileStep;
             newRankIdx += rankStep;
         }
-    })
+    });
+
+    return legalMoves;
 }
 
-function highlightKnightMoves(pos, color) {
+function getLegalKnightMoves(pos, color) {
+    let legalMoves = [];
 
     const file = pos[0];
     const rank = pos[1];
@@ -379,21 +371,23 @@ function highlightKnightMoves(pos, color) {
             const occupant = targetSquare.querySelector('img');
 
             if (!occupant || occupant.dataset.color !== color) {
-                highlightMove(newPosition);
+                legalMoves.push(newPosition);
             }
         }
     });
+
+    return legalMoves;
 }
 
 // QUEEN MOVEMENT
-function highlightQueenMoves(pos, color) {
+function getLegalQueenMoves(pos, color) {
     // Queen can move both as rook and bishop
-    highlightRookMoves(pos, color);
-    highlightBishopMoves(pos, color);
+    return getLegalRookMoves(pos, color).concat(getLegalBishopMoves(pos, color));
 }
 
 // KING MOVEMENT
-function highlightKingMoves(pos, color) {
+function getLegalKingMoves(pos, color) {
+    let legalMoves = [];
 
     const file = pos[0];
     const rank = parseInt(pos[1]);
@@ -422,11 +416,13 @@ function highlightKingMoves(pos, color) {
             if (square) {
                 let occupant = square.querySelector('img');
                 if (!occupant || occupant.dataset.color !== color) {
-                    highlightMove(squareID);
+                    legalMoves.push(squareID);
                 }
             }
         }
     });
+
+    return legalMoves;
 }
 
 // Move piece
@@ -446,7 +442,7 @@ function movePiece(piece, fromSquare, toSquare) {
             fromSquare.removeChild(piece);
             toSquare.appendChild(piece);
             removeHighlightedMove()
-        }, 300);
+        }, 200);
     }
     else {
 
@@ -458,4 +454,84 @@ function movePiece(piece, fromSquare, toSquare) {
         removeHighlightedMove();
 
     }
+}
+
+// Check king of the color (white & black) is in Danger or not
+function isKingInCheck(color) {
+    const king = document.querySelector(`img[data-piece="king"][data-color = "${color}"]`);
+    if (!king) {
+        return false; // king is already captured (Game Over)
+    }
+
+    const kingSquare = king.parentElement;
+    const kingPosition = kingSquare.id;
+
+    // Check if any opponent can move to king position
+    const opponentColor = color === 'white' ? 'black' : 'white';
+    const opponents = document.querySelectorAll(`img[data-color="${opponentColor}"]`);
+
+    for (let piece of opponents) {
+        const pieceSquareID = piece.parentElement.id;
+        const type = piece.dataset.piece;
+
+        // Stimulate legal Piece for each piece
+        const possibleMoves = getLegalMoves(type, pieceSquareID, opponentColor)
+        if (possibleMoves.includes(kingPosition)) {
+            return true; // king is in check
+        }
+    }
+
+    return false;
+}
+
+
+// Stimulate moves for the piece
+
+function getLegalMoves(pieceType, currPosition, color) {
+    let legalMoves = [];
+
+    switch (pieceType) {
+
+        case 'pawn':
+            legalMoves = getlegalpawnMoves(currPosition, color);
+            break;
+
+        case 'rook':
+            legalMoves = getLegalRookMoves(currPosition, color);
+            break;
+
+        case 'bishop':
+            legalMoves = getLegalBishopMoves(currPosition, color);
+            break;
+
+        case 'knight':
+            legalMoves = getLegalKnightMoves(currPosition, color);
+            break;
+
+        case 'queen':
+            legalMoves = getLegalQueenMoves(currPosition, color);
+            break;
+
+        case 'king':
+            legalMoves = getLegalKingMoves(currPosition, color);
+            break;
+
+        default:
+            break;
+    }
+
+    return legalMoves;
+}
+
+function showCheckNotification() {
+
+    const banner = document.getElementById("check-notification");
+    banner.classList.remove("hidden");
+    banner.classList.add("show");
+
+    // Hide after 2 sec
+    setTimeout(() => {
+        banner.classList.remove("show");
+        banner.classList.add("hidden");
+    }, 2500);
 }
